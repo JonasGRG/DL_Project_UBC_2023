@@ -1,5 +1,6 @@
 # Data
 data/UBC_tile_dataset/
+.DS_Store
 
 
 # Byte-compiled / optimized / DLL files
