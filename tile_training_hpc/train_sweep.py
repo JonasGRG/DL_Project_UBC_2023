@@ -61,5 +61,3 @@ sweep_id = wandb.sweep(sweep_config, project="UBC_tile_classification_sweep")
 
 # Start the sweep agent
 wandb.agent(sweep_id, function=train)
-
-
