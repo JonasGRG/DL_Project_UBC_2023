@@ -1,0 +1,41 @@
+program: train.py
+method: random
+metric:
+  name: val_balanced_accuracy
+  goal: maximize
+run_cap: 200
+early_terminate:
+  type: hyperband
+  min_iter: 3
+parameters:
+  model_name:
+    values: [
+    resnext101_32x8d.fb_swsl_ig1b_ft_in1k, 
+    resnet50.fb_swsl_ig1b_ft_in1k,
+    efficientnet_es.ra_in1k,
+    caformer_b36.sail_in22k_ft_in1k,
+    caformer_s36.sail_in22k_ft_in1k,
+    tiny_vit_21m_224.dist_in22k_ft_in1k
+    ] 
+  drop_rate:
+    min: 0.0
+    max: 0.8
+  loss:
+    values: ['focal', 'cross_entropy']
+  optimizer:
+    values: ['adam', 'adamw']
+  backbone_lr:
+    min: 1e-7
+    max: 1e-5
+  head_lr:
+    min: 1e-5
+    max: 1e-3
+  weight_decay:
+    min: 0
+    max: 1e-5
+  scheduler': 
+    values: ['None', 'CosineAnnealingLR', 'StepLR', 'ExponentialLR']
+  batch_size:
+    values: [32, 64, 128, 256, 512]
+  augmentation:
+    values: ['light', 'moderate', 'heavy']

@@ -8,6 +8,12 @@ timm = "*"
 torch = "*"
 pytorch-lightning = "*"
 wandb = "*"
+monai = "*"
+torchmetrics = "*"
+scikit-learn = "*"
+torchvision = "*"
+opencv-python = "*"
+scikit-image = "*"
 
 [dev-packages]
 
