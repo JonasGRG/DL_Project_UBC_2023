@@ -12,9 +12,10 @@ class Dict2Class(object):
         for key in my_dict:
             setattr(self, key, my_dict[key])
 
-class RandStainNA(object):
+class RandStainNAd(object):
     def __init__(
         self,
+        keys: list,
         yaml_file: str,
         std_hyper: Optional[float] = 0,
         distribution: Optional[str] = "normal",
@@ -27,6 +28,7 @@ class RandStainNA(object):
             "uniform",
         ], "Unsupported distribution style {}.".format(distribution)
 
+        self.keys = keys
         self.yaml_file = yaml_file
         cfg = self._get_yaml_data(self.yaml_file)
         c_s = cfg["color_space"]
@@ -196,11 +198,13 @@ class RandStainNA(object):
 
         return transformed_image
 
-    def __call__(self, img):
-        if np.random.rand(1) < self.p:
-            return self.augment(img)
-        else:
-            return np.array(img)
+    def __call__(self, data):
+        # Apply to each key in the self.keys list
+        d = dict(data)
+        for key in self.keys:
+            if np.random.rand(1) < self.p:
+                d[key] = self.augment(d[key])
+        return d
 
     def __repr__(self):
         format_string = self.__class__.__name__ + "("

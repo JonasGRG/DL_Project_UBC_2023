@@ -22,4 +22,4 @@
 # -- end of LSF options --
 
 # Run the Python script (assuming train_sweep.py is in the same directory)
-python train_sweep.py
+python tile_training_hpc/train_sweep.py

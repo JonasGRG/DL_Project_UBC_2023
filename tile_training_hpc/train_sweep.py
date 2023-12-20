@@ -22,39 +22,49 @@ CLASS_WEIGHTS = torch.tensor([0.7140, 0.5517, 0.3039, 1.6141, 1.8163])
 PRETRAINED = True
 
 # Data
-TRAIN_DIR = '../data/UBC_tile_224_500k/train'
-VAL_DIR = '../data/UBC_tile_224_500k/validation'
+TRAIN_DIR = 'data/UBC_tile_224_500k/train'
+VAL_DIR = 'data/UBC_tile_224_500k/validation'
 SUBSET=True
 
 
 # Load sweep config from yaml YAML file
-with open('sweep_config.yaml', 'r') as file:
+with open('tile_training_hpc/sweep_config.yaml', 'r') as file:
     sweep_config = yaml.safe_load(file)
+    print('here')
 
 def train():
-    # Initialize a new wandb run
-    with wandb.init() as run:
-        # Get the sweep configuration for this run
-        config = run.config
+    model, data_module, trainer = None, None, None
 
-        # Create the DataModule and Model using the wandb configuration
-        data_module = ImageFolderClassificationModule(config, train_dir=TRAIN_DIR, val_dir=VAL_DIR, subset=SUBSET, num_workers=NUM_WORKERS)
-        model = CustomModel(config, pretrained=PRETRAINED, num_classes=NUM_CLASSES, weight=CLASS_WEIGHTS)
+    try:
+        with wandb.init() as run:
+            config = run.config
+            data_module = ImageFolderClassificationModule(config, train_dir=TRAIN_DIR, val_dir=VAL_DIR, subset=SUBSET, num_workers=NUM_WORKERS)
+            model = CustomModel(config, pretrained=PRETRAINED, num_classes=NUM_CLASSES, weight=CLASS_WEIGHTS)
+            wandb_logger = WandbLogger()
+            trainer = pl.Trainer(
+                max_epochs=NUM_EPOCHS,
+                check_val_every_n_epoch=1,
+                log_every_n_steps=50,
+                logger=wandb_logger,
+                accelerator='auto',
+                gradient_clip_val=0.5,
+                gradient_clip_algorithm='norm',
+            )
+            trainer.fit(model, datamodule=data_module)
 
-        # Set up the WandbLogger
-        wandb_logger = WandbLogger()
+    except Exception as e:
+        print(f'An error occurred during training: {e}')
+        if wandb.run is not None:
+            wandb.log({"error": str(e)})
 
-        # Initialize the Trainer with the WandbLogger
-        trainer = pl.Trainer(
-            max_epochs=NUM_EPOCHS,
-            check_val_every_n_epoch=1,
-            log_every_n_steps=50,
-            logger=wandb_logger,
-            accelerator='auto'
-        )
-
-        # Start training
-        trainer.fit(model, datamodule=data_module)
+    finally:
+        if model is not None:
+            del model
+        if data_module is not None:
+            del data_module
+        if trainer is not None:
+            del trainer
+        torch.cuda.empty_cache()
 
 # Initialize the sweep
 sweep_id = wandb.sweep(sweep_config, project="UBC_tile_classification_sweep")
